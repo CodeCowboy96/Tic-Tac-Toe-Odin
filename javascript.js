@@ -1,13 +1,30 @@
+//setup interaction in the console so the board can take in player moves 
+    //the game should alternate back and forth between players taking turns, each placing one marker per turn
+
 const gameBoard = (function () {
     const board = [
         [null, null, null,],
         [null, null, null,],
-        ['O', 'O', 'O',]
+        [null, null, null,]
     ];
-    return board;
+    function printBoard() {
+        console.clear();
+        console.log('\nCurrent Board:');
+        board.forEach(row => console.log(row.map(cell => cell || '-').join(' ')));
+    }
+
+    function makeMove(row, col, marker) {
+        if (board[row][col] !== null) {
+            alert('Cell already taken. Try again.');
+            return false;
+        }
+        board[row][col] = marker;
+        return true;
+    }
+
+    return { board, printBoard, makeMove };
 })();
-    //object to handle game board state 
-    //first store an empty 3x3 array 
+
     //take in either X or O at a specified position within the array 
     //update display to show last players choice and current game board
 
@@ -32,28 +49,59 @@ const gameState = (function(){
             if (line.every(cell => cell === 'O')) return 'Player 2 (O) wins';
         }
 
-        return 'No winner yet';
+        return null;
     }
 
-    
     return {
-        evaluate: () => checkWinner(gameBoard)
+        evaluate: () => checkWinner(gameBoard.board)
     };
-    
-    //needs to run every time game board changes
-    //checks gameBoard array for 3 X's or 3 O's in a row in any direction.
-    //declares winner if above winning condition is met.
 })();
-console.log(gameState.evaluate());
 
 const players = (function people (playerOneName = 'Will', playerTwoName = 'Billy') {
     return {
         playerOne: { name: playerOneName, marker: 'X' },
-        playerTwo: { name: playerTwoName, marker: 'O' }
+        playerTwo: { name: playerTwoName, marker: '0' }
     };
 })();
 
-    //needs to store up to 2 player names
-    // assign X's to player 1 and O's to player 2
+(function startGame() {
+    let currentPlayer = players.playerOne;
+    let moveCount = 0;
+
+    while (true) {
+        gameBoard.printBoard();
+        const input = prompt(`${currentPlayer.name} (${currentPlayer.marker}), enter your move as row,col:`);
+
+        if (!input) {
+            alert('Game cancelled.');
+            break;
+        }
+
+        const [row, col] = input.split(',').map(s => Number(s.trim()));
+        if ([row, col].some(n => isNaN(n) || n < 0 || n > 2)) {
+            alert('Invalid input. Use numbers between 0-2.');
+            continue;
+        }
+
+        const success = gameBoard.makeMove(row, col, currentPlayer.marker);
+        if (!success) continue;
+
+        moveCount++;
+        const result = gameState.evaluate();
+        if (result) {
+            gameBoard.printBoard();
+            alert(result);
+            break;
+        }
+
+        if (moveCount === 9) {
+            gameBoard.printBoard();
+            alert("It's a draw!");
+            break;
+        }
+
+        currentPlayer = (currentPlayer === players.playerOne) ? players.playerTwo : players.playerOne;
+    }
+})();
 
 
